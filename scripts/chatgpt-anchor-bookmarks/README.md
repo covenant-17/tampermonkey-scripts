@@ -2,6 +2,8 @@
 
 Adds a floating glass-style panel with emoji anchor buttons for each user/assistant message in ChatGPT. Features true lazy loading for optimal performance even with thousands of messages.
 
+https://github.com/user-attachments/assets/9a594378-09c1-4e89-98b7-6b7bde345672
+
 ## Features
 
 ### 🔖 Smart Bookmarking
