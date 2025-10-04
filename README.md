@@ -24,7 +24,35 @@ This repository serves as a centralized collection of userscripts for the Tamper
 - Documentation and examples for common use cases
 - Best practices for userscript development
 
+## Repository Structure
+
+- `scripts/` - Public Tampermonkey scripts
+  - `examples/` - Example scripts for learning
+  - `utilities/` - Utility scripts for common tasks
+- `scripts-private/` - Private scripts (Git submodule, optional)
+
 ## Getting Started
+
+### Installation Options
+
+**Option 1: Clone public scripts only**
+```bash
+git clone https://github.com/covenant-17/tampermonkey-scripts.git
+```
+
+**Option 2: Clone with private scripts (requires access)**
+```bash
+git clone --recurse-submodules https://github.com/covenant-17/tampermonkey-scripts.git
+```
+
+**Option 3: Add private scripts submodule to existing clone**
+```bash
+cd tampermonkey-scripts
+git submodule add https://github.com/YOUR-USERNAME/tampermonkey-private-scripts.git scripts-private
+git submodule update --init --recursive
+```
+
+### Using Scripts
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) browser extension
 2. Browse the scripts in this repository
