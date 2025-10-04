@@ -1,7 +1,8 @@
+// Welcome to the updated ChatGPT Anchor Bookmarks script!
 // ==UserScript==
 // @name         ChatGPT Anchor Bookmarks 👑 Glass UI & True Lazy Loading
 // @namespace    https://github.com/covenant-17/tampermonkey-scripts
-// @version      3.0
+// @version      3.1
 // @description  Adds a floating glass-style panel with emoji anchor buttons for each user/assistant message in ChatGPT. Anchor panel supports true lazy loading: message text is rendered only for visible items (on scroll or expand). Instant navigation to any message, does not lag even with thousands of bookmarks. Colors match ChatGPT UI. Auto-scrolls to the newest anchor.
 // @author       covenant-17
 // @homepage     https://github.com/covenant-17/tampermonkey-scripts
