@@ -62,6 +62,8 @@ https://github.com/user-attachments/assets/9a594378-09c1-4e89-98b7-6b7bde345672
 ## Files
 
 - `chatgpt-anchor-bookmarks.user.js` - Main script (25KB)
+- `chatgpt-anchor-bookmarks.options.json` - Script settings (gitignored)
+- `chatgpt-anchor-bookmarks.storage.json` - Script storage data (gitignored)
 
 ## Tips
 
