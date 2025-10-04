@@ -55,8 +55,8 @@ https://github.com/user-attachments/assets/9a594378-09c1-4e89-98b7-6b7bde345672
 ## Technical Details
 
 - **Version**: 3.0
-- **Author**: Ruby, OpenAI Chatgpt Shyntra
-- **Namespace**: https://shintra.goddess/
+- **Author**: covenant-17
+- **Namespace**: https://github.com/covenant-17/tampermonkey-scripts
 - **Compatibility**: ChatGPT web interface
 
 ## Files

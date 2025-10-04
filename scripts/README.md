@@ -2,23 +2,6 @@
 
 This directory contains organized userscripts for Tampermonkey.
 
-## Installation Instructions
-
-1. **Install Tampermonkey**
-   - [Chrome Web Store](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
-   - [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
-   - [Safari Extensions](https://apps.apple.com/us/app/tampermonkey/id1482490089)
-
-2. **Add a Script**
-   - Open the Tampermonkey dashboard
-   - Click "Create a new script"
-   - Copy and paste the script code
-   - Save (Ctrl+S or Cmd+S)
-
-3. **Enable the Script**
-   - Ensure the script is enabled in the dashboard
-   - Visit a matching website to see it in action
-
 ## Script Template
 
 Use this template for new userscripts:
@@ -29,7 +12,9 @@ Use this template for new userscripts:
 // @namespace    https://github.com/covenant-17/tampermonkey-scripts  
 // @version      1.0
 // @description  Brief description of what the script does
-// @author       Your Name
+// @author       covenant-17
+// @homepage     https://github.com/covenant-17/tampermonkey-scripts
+// @source       https://github.com/covenant-17/tampermonkey-scripts
 // @match        https://example.com/*
 // @grant        none
 // @license      MIT
