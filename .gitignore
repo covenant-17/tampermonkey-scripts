@@ -1,0 +1,10 @@
+# Ignore Tampermonkey metadata
+*.options.json
+*.storage.json
+Tampermonkey.global.json
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE files
