@@ -2,25 +2,6 @@
 
 This directory contains organized userscripts for Tampermonkey.
 
-## Directory Structure
-
-### 📁 `examples/`
-Simple example scripts that demonstrate basic Tampermonkey functionality:
-- `hello-world.js` - Basic greeting script showing DOM manipulation and styling
-
-### 📁 `utilities/`
-General utility scripts that enhance browsing experience:
-- Scripts for improving website functionality
-- Performance enhancements
-- Accessibility improvements
-
-### 📁 `social-media/`
-Scripts specifically for social media platforms:
-- Twitter/X enhancements
-- Facebook improvements  
-- Instagram utilities
-- LinkedIn tools
-
 ## Installation Instructions
 
 1. **Install Tampermonkey**
