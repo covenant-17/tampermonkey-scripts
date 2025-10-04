@@ -6,6 +6,8 @@
 // @author       covenant-17
 // @homepage     https://github.com/covenant-17/tampermonkey-scripts
 // @source       https://github.com/covenant-17/tampermonkey-scripts
+// @updateURL    https://raw.githubusercontent.com/covenant-17/tampermonkey-scripts/main/scripts/chatgpt-anchor-bookmarks/chatgpt-anchor-bookmarks.user.js
+// @downloadURL  https://raw.githubusercontent.com/covenant-17/tampermonkey-scripts/main/scripts/chatgpt-anchor-bookmarks/chatgpt-anchor-bookmarks.user.js
 // @match        https://chat.openai.com/*
 // @match        https://chatgpt.com/*
 // @grant        none
