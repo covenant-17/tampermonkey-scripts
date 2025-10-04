@@ -6,8 +6,6 @@ A collection of Tampermonkey userscripts to enhance web browsing experience.
 
 - `scripts/` - Public Tampermonkey scripts
   - `chatgpt-anchor-bookmarks/` - ChatGPT navigation bookmarks
-  - `examples/` - Example scripts for learning
-  - `utilities/` - Utility scripts for common tasks
 
 ## Getting Started
 
