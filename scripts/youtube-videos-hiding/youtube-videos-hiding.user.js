@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         youtube-videos-hiding
 // @namespace    https://github.com/covenant-17/tampermonkey-scripts
-// @version      1.0.5
+// @version      1.1.0
 // @description  Hides YouTube videos via right-click on Home, Subscriptions, and Watch Later pages
 // @author       covenant-17
 // @homepage     https://github.com/covenant-17/tampermonkey-scripts
@@ -15,12 +15,56 @@
 (function() {
     'use strict';
 
-    // Debug mode configuration
-    // Enable debug: localStorage.setItem('ytHiderDebug', 'true')
-    // Disable debug: localStorage.removeItem('ytHiderDebug')
+    // Configuration
     const DEFAULT_DEBUG = false;
     const DEBUG = localStorage.getItem('ytHiderDebug') === 'true' || 
                   (localStorage.getItem('ytHiderDebug') === null && DEFAULT_DEBUG);
+    
+    // Timeouts for YouTube UI interactions (in milliseconds)
+    const TIMEOUTS = {
+        MENU_BUTTON_WAIT: 40,    // Wait for menu button to be ready
+        BEFORE_CLICK: 30,         // Wait before analyzing URL and clicking
+        POPUP_APPEAR: 10,         // Wait for popup menu to appear
+        DEBOUNCE_SCAN: 250        // Debounce time for mutation observer
+    };
+    
+    // YouTube page URLs
+    const YOUTUBE_PAGES = {
+        HOME: "https://www.youtube.com/",
+        SUBSCRIPTIONS: "https://www.youtube.com/feed/subscriptions",
+        WATCH_LATER: "playlist?list=WL"
+    };
+    
+    // CSS Selectors
+    const SELECTORS = {
+        MENU_BUTTON: [
+            '[aria-label="More actions"]',
+            '[aria-label*="Action"]',
+            'ytd-menu-renderer button',
+            'button[aria-label*="menu"]',
+            'ytd-menu-renderer yt-icon-button',
+            'button.yt-spec-button-shape-next',
+            '.yt-lockup-metadata-view-model__menu-button button'
+        ],
+        MENU_POPUP: [
+            'yt-sheet-view-model yt-list-view-model',
+            'yt-list-view-model[role="listbox"]',
+            'yt-list-view-model[role="menu"]',
+            '[role="menu"]',
+            'tp-yt-paper-listbox'
+        ],
+        MENU_POPUP_PLAYLIST: [
+            'ytd-menu-popup-renderer',
+            'tp-yt-paper-listbox'
+        ],
+        VIDEO_CONTAINERS: 'ytd-rich-item-renderer #content, ytd-playlist-video-renderer #content',
+        WATCH_LATER_ITEMS: 'tp-yt-paper-item',
+        NEW_MENU_ITEMS: 'yt-list-item-view-model',
+        OBSERVER_TARGET: 'ytd-app'
+    };
+    
+    // Utility: sleep function
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     
     function log(...args) {
         if (DEBUG) {
@@ -60,19 +104,9 @@
 
     // Find the menu button for a video content node using several fallbacks
     function findMenuButton(contentNode) {
-        const selectors = [
-            '[aria-label="More actions"]',
-            '[aria-label*="Action"]',
-            'ytd-menu-renderer button',
-            'button[aria-label*="menu"]',
-            'ytd-menu-renderer yt-icon-button',
-            'button.yt-spec-button-shape-next',
-            '.yt-lockup-metadata-view-model__menu-button button'
-        ];
+        let btn = trySelectors(contentNode, SELECTORS.MENU_BUTTON, 'findMenuButton');
         
-        let btn = trySelectors(contentNode, selectors, 'findMenuButton');
-        
-        if (!btn && window.location.href.includes("playlist")) {
+        if (!btn && window.location.href.includes(YOUTUBE_PAGES.WATCH_LATER)) {
             log('findMenuButton: trying playlist parent');
             btn = contentNode.parentElement?.querySelector('ytd-menu-renderer button');
             if (btn) log('findMenuButton: found via playlist parent');
@@ -85,15 +119,8 @@
     // Find the menu popup element after clicking the menu button
     function findMenuPopup(url) {
         const selectors = [
-            'yt-sheet-view-model yt-list-view-model',
-            ...(url.includes("playlist") ? [
-                'ytd-menu-popup-renderer',
-                'tp-yt-paper-listbox'
-            ] : []),
-            'yt-list-view-model[role="listbox"]',
-            'yt-list-view-model[role="menu"]',
-            '[role="menu"]',
-            'tp-yt-paper-listbox'
+            ...SELECTORS.MENU_POPUP,
+            ...(url.includes(YOUTUBE_PAGES.WATCH_LATER) ? SELECTORS.MENU_POPUP_PLAYLIST : [])
         ];
         
         const popup = trySelectors(document, selectors, 'findMenuPopup');
@@ -118,18 +145,20 @@
         }
 
         if (isWatchLater) {
-            const paperItems = menuPopup.querySelectorAll('tp-yt-paper-item');
+            const paperItems = menuPopup.querySelectorAll(SELECTORS.WATCH_LATER_ITEMS);
             const item = findByText(paperItems, ['Remove from Watch Later'], 'Watch Later');
             if (item) {
                 item.click();
                 console.log('[YouTube Hider] Action: removed from Watch Later');
+            } else {
+                log('handleMenuAction: Watch Later item not found');
             }
             return;
         }
 
         // Home page / default: find "Not interested" or "Hide"
         log('handleMenuAction: Home mode');
-        const listItems = menuPopup.querySelectorAll('yt-list-item-view-model');
+        const listItems = menuPopup.querySelectorAll(SELECTORS.NEW_MENU_ITEMS);
         let hideMenuItem = findByText(listItems, ['Not interested', 'Hide'], 'new structure');
         
         if (!hideMenuItem) {
@@ -152,47 +181,47 @@
     function attachAuxclickListener(contentNode) {
         if (contentNode.dataset.hideevent) return;
         
-        contentNode.addEventListener('auxclick', (event) => {
+        contentNode.addEventListener('auxclick', async (event) => {
             log('auxclick: button', event.button);
             
-            setTimeout(() => {
-                const menuButton = findMenuButton(contentNode);
-                if (!menuButton) {
-                    log('auxclick: no menu button, aborting');
-                    return;
-                }
-                
-                setTimeout(() => {
-                    const url = window.location.href;
-                    const isHome = url === "https://www.youtube.com/" && event.button !== 1;
-                    const isSubscriptions = url === "https://www.youtube.com/feed/subscriptions";
-                    const isWatchLater = url.includes("playlist?list=WL");
-                    
-                    log('auxclick:', { isHome, isSubscriptions, isWatchLater });
+            await sleep(TIMEOUTS.MENU_BUTTON_WAIT);
+            
+            const menuButton = findMenuButton(contentNode);
+            if (!menuButton) {
+                log('auxclick: no menu button, aborting');
+                return;
+            }
+            
+            await sleep(TIMEOUTS.BEFORE_CLICK);
+            
+            const url = window.location.href;
+            const isHome = url === YOUTUBE_PAGES.HOME && event.button !== 1;
+            const isSubscriptions = url === YOUTUBE_PAGES.SUBSCRIPTIONS;
+            const isWatchLater = url.includes(YOUTUBE_PAGES.WATCH_LATER);
+            
+            log('auxclick:', { isHome, isSubscriptions, isWatchLater });
 
-                    if (isHome || isSubscriptions || isWatchLater) {
-                        menuButton.click();
-                        
-                        setTimeout(() => {
-                            const menuPopup = findMenuPopup(url);
-                            if (menuPopup) {
-                                handleMenuAction(menuPopup, isSubscriptions, isWatchLater);
-                            } else {
-                                log('auxclick: no menu popup found');
-                            }
-                        }, 10);
-                    } else {
-                        log('auxclick: unsupported page');
-                    }
-                }, 30);
-            }, 40);
+            if (isHome || isSubscriptions || isWatchLater) {
+                menuButton.click();
+                
+                await sleep(TIMEOUTS.POPUP_APPEAR);
+                
+                const menuPopup = findMenuPopup(url);
+                if (menuPopup) {
+                    handleMenuAction(menuPopup, isSubscriptions, isWatchLater);
+                } else {
+                    log('auxclick: no menu popup found');
+                }
+            } else {
+                log('auxclick: unsupported page');
+            }
         });
         contentNode.dataset.hideevent = "true";
     }
 
     // Scans the page and attaches auxclick listeners to video content containers
     function scanAndAttachListeners() {
-        const videoContents = document.querySelectorAll('ytd-rich-item-renderer #content, ytd-playlist-video-renderer #content');
+        const videoContents = document.querySelectorAll(SELECTORS.VIDEO_CONTAINERS);
         
         let attached = 0;
         for (const contentNode of videoContents) {
@@ -222,7 +251,7 @@
                     log('scheduleScan: error', err);
                 }
                 debounceScheduled = false;
-            }, 250);
+            }, TIMEOUTS.DEBOUNCE_SCAN);
         };
 
         const observer = new MutationObserver((mutations) => {
@@ -235,7 +264,7 @@
             }
         });
 
-        const targetNode = document.querySelector('ytd-app') || document.body;
+        const targetNode = document.querySelector(SELECTORS.OBSERVER_TARGET) || document.body;
         log('MutationObserver: observing', targetNode.tagName);
         observer.observe(targetNode, { childList: true, subtree: true });
     })();
