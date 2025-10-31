@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         youtube-videos-hiding
 // @namespace    https://github.com/covenant-17/tampermonkey-scripts
-// @version      1.0.2
+// @version      1.0.3
 // @description  Hides YouTube videos via right-click on Home, Subscriptions, and Watch Later pages
 // @author       covenant-17
 // @homepage     https://github.com/covenant-17/tampermonkey-scripts
@@ -33,9 +33,12 @@
     // Find the menu popup element after clicking the menu button
     function findMenuPopup(url) {
         let popup = null;
-        if (url.includes("playlist")) {
+        // Try new YouTube menu structure first (yt-sheet-view-model with nested yt-list-view-model)
+        popup = document.querySelector('yt-sheet-view-model yt-list-view-model');
+        if (!popup && url.includes("playlist")) {
             popup = document.querySelector('ytd-menu-popup-renderer') || document.querySelector('tp-yt-paper-listbox');
         }
+        if (!popup) popup = document.querySelector('yt-list-view-model[role="listbox"]');
         if (!popup) popup = document.querySelector('yt-list-view-model[role="menu"]');
         if (!popup) popup = document.querySelector('[role="menu"]');
         if (!popup) popup = document.querySelector('tp-yt-paper-listbox');
@@ -64,17 +67,33 @@
             return;
         }
 
-        // Home page / default: try explicit 'Hide' or fallback to third-last
+        // Home page / default: try to find "Not interested" in new or old menu structure
         let hideMenuItem = null;
-        for (const child of menuPopup.children) {
-            if (child.textContent && child.textContent.trim() === 'Hide') {
-                hideMenuItem = child;
+        
+        // New structure: yt-list-item-view-model elements
+        const listItems = menuPopup.querySelectorAll('yt-list-item-view-model');
+        for (const item of listItems) {
+            const text = item.textContent && item.textContent.trim();
+            if (text === 'Not interested' || text === 'Hide') {
+                hideMenuItem = item;
                 break;
             }
         }
+        
+        // Old structure fallback: direct children
+        if (!hideMenuItem) {
+            for (const child of menuPopup.children) {
+                const text = child.textContent && child.textContent.trim();
+                if (text === 'Not interested' || text === 'Hide') {
+                    hideMenuItem = child;
+                    break;
+                }
+            }
+        }
+        
         if (hideMenuItem) {
             hideMenuItem.click();
-            console.log('[YouTube Hider] Action: hid video');
+            console.log('[YouTube Hider] Action: clicked "Not interested" or "Hide"');
         } else if (menuPopup.children.length >= 3) {
             menuPopup.children[menuPopup.children.length - 3].click();
             console.log('[YouTube Hider] Action: hid video (fallback third last)');
